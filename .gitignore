@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Poetry venv
+.venv/
+
+# Env & secrets
+.env
+.env.*
+*.secret*
+*SECRET*
+*secret*
+
+# Alembic
+alembic/versions/__pycache__/
+alembic/versions/*.pyc
+alembic/versions/*.pyo
+
+# General cache
+*.log
+*.sqlite3
+*.db
+*.pid
+*.swp
+*.swo
+*.bak
+*.tmp
+tmp/
+cache/
+poetry.lock
+
+# VSCode
+.vscode/
