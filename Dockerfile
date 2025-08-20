@@ -4,12 +4,13 @@ FROM python:3.12-slim
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     libpq-dev \
-    postgresql-client \ 
+    postgresql-client \
+    curl \
+    iputils-ping \
     && pip install poetry \
     && apt-get purge -y --auto-remove gcc libpq-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
-
 WORKDIR /app
 COPY pyproject.toml poetry.lock ./
 ENV POETRY_NO_INTERACTION=1 \
