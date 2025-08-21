@@ -1,6 +1,5 @@
-from sqlalchemy import Integer, String, DateTime, ForeignKey, JSON
-from sqlalchemy.orm import relationship, Mapped, mapped_column
-from sqlalchemy import Enum as SQLEnum
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import Integer, String, DateTime, ForeignKey, JSON, Enum as SQLEnum
 from app.database.base import Base
 from datetime import datetime, timezone
 from app.models.enums import WeekDayEnum, HabitKindEnum
@@ -14,7 +13,7 @@ class Habit(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     kind: Mapped[HabitKindEnum] = mapped_column(SQLEnum(HabitKindEnum), nullable=False)
-    days: Mapped[list[str]] = mapped_column(JSON, nullable=True)
+    days: Mapped[list[WeekDayEnum]] = mapped_column(JSON, nullable=True)
 
-    user = relationship("User", back_populates="habit")
-    track = relationship("Track", back_populates="habit")
+    user = relationship("User", back_populates="habits")
+    tracks = relationship("Track", back_populates="habit")
