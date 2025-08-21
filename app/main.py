@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from app.database.database import get_db
 
 app = FastAPI()
 

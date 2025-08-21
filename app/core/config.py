@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     DB_NAME: str
     REDIS_URL: str
     BOT_TOKEN: str
+    ALEMBIC_URL: str
     
     model_config = SettingsConfigDict(env_file=".env")
 
