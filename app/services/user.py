@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.crud.user import create_user, get_user_by_telegram_id, get_user_by_id  # Добавь get_user_by_id
+from app.crud.user import create_user, get_user_by_telegram_id, get_user_by_id 
 from app.schemas.user import UserCreate, UserResponse
 
 async def create_user_service(db: AsyncSession, user_data: UserCreate) -> UserResponse:
