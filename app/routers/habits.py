@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.database import get_db
-from app.schemas.habit import HabitCreate, HabitResponse
-from app.services.habit import create_habit_service, get_habits_by_user_service
+from app.schemas.habit import HabitCreate, HabitResponse, HabitUpdate
+from app.services.habit import create_habit_service, get_habits_by_user_service, update_habit_service, delete_habit_service
 from app.services.user import get_user_by_id_service
 
 router = APIRouter(prefix='/habits', tags=['habits'])
@@ -33,3 +33,27 @@ async def get_habits_by_user(
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.patch('/{habit_id}', response_model=HabitResponse)
+async def update_habit(
+    habit_id: int,
+    habit_update: HabitUpdate,
+    user_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    habit = await update_habit_service(db, habit_id, user_id, habit_update)
+    if not habit:
+        raise HTTPException(status_code=404, detail="Habit not found")
+    return habit
+
+@router.delete('/{habit_id}')
+async def delete_habit(
+    habit_id: int,
+    user_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    result = await delete_habit_service(db, habit_id, user_id)
+    if not result:
+        raise HTTPException(status_code=404, detail="Habit not found")
+    return {"detail": "Habit deleted successfully"}

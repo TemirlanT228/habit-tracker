@@ -31,6 +31,13 @@ class HabitResponse(BaseModel):
     kind: HabitKindEnum
     days: Optional[List[WeekDayEnum]] = None
 
+class HabitUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    kind: Optional[HabitKindEnum] = None
+    days: Optional[List[WeekDayEnum]] = None
+    time: Optional[datetime] = None
 
-from pydantic import BaseModel, ConfigDict
-from datetime import datetime
+class HabitDelete(BaseModel):
+    id: int
+    
