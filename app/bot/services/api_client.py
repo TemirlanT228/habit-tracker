@@ -1,37 +1,9 @@
-from pydantic import BaseModel
 from typing import List, Optional
 import httpx
-
-class UserCreate(BaseModel):
-    telegram_id: int
-    username: Optional[str] = None
-
-class UserResponse(BaseModel):
-    id: int
-    telegram_id: int
-    username: Optional[str]
-    created_at: str
-    streak: int
-
-class HabitCreate(BaseModel):
-    user_id: int
-    name: str
-    description: Optional[str] = None
-    kind: str
-    days: Optional[List[str]] = None
-
-class HabitResponse(BaseModel):
-    id: int
-    user_id: int
-    name: str
-    description: Optional[str]
-    kind: str
-    days: Optional[List[str]]
-    created_at: str
-    updated_at: str
+from app.bot.schemas.user import UserCreate, UserResponse
+from app.bot.schemas.habit import HabitCreate, HabitResponse
 
 class ApiClient:
-
     def __init__(self, base_url: str = "http://backend:8000"):
         self.base_url = base_url
         self.client = httpx.AsyncClient(follow_redirects=True)
@@ -71,6 +43,15 @@ class ApiClient:
         )
         response.raise_for_status()
         return [HabitResponse(**habit) for habit in response.json()]
+    
+    async def update_habit(self, habit_id: int, user_id: int, updates: dict) -> HabitResponse:
+        response = await self.client.patch(
+            f"{self.base_url}/habits/{habit_id}",
+            params={"user_id": user_id},
+            json=updates
+        )
+        response.raise_for_status()
+        return HabitResponse(**response.json())
 
     async def close(self):
         await self.client.aclose()

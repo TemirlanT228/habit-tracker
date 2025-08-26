@@ -20,12 +20,13 @@ async def start_command(message: Message, state, api_client: ApiClient):
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text="Create Habit")],
-            [KeyboardButton(text="List Habits")]
+            [KeyboardButton(text="List Habits")],
+            [KeyboardButton(text="Edit Habit")]
         ],
         resize_keyboard=True,
         one_time_keyboard=False
     )
     await message.answer(
-        "Привет! Я бот для отслеживания привычек.\n\nНажми 'Create Habit', чтобы добавить новую привычку, или 'List Habits', чтобы посмотреть свои привычки.",
+        "Привет! Я бот для отслеживания привычек.\n\nНажми 'Create Habit', чтобы добавить новую привычку, 'List Habits' — чтобы посмотреть свои привычки, или 'Edit Habit' — чтобы отредактировать.",
         reply_markup=keyboard
     )

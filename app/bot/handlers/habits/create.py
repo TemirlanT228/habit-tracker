@@ -1,24 +1,12 @@
 from aiogram import Router
-from aiogram.filters import Command
 from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import State, StatesGroup
 from app.bot.services.api_client import ApiClient
-from app.schemas.habit import HabitCreate
+from app.bot.schemas.habit import HabitCreate
+from app.models.enums import HabitKindEnum, WeekDayEnum
+from .common import cancel_habit, HabitStates
 
 router = Router()
-
-class HabitStates(StatesGroup):
-    name = State()
-    description = State()
-    kind = State()
-    days = State()
-
-@router.message(Command("cancel"))
-async def cancel_habit(message: Message, state: FSMContext):
-    await state.clear()
-    await message.answer("Отменено.", reply_markup=None)
-
 
 @router.message(lambda m: m.text == "Create Habit")
 async def start_habit_scenario(message: Message, state: FSMContext):
@@ -33,16 +21,7 @@ async def start_habit_scenario(message: Message, state: FSMContext):
 @router.message(HabitStates.name)
 async def process_name(message: Message, state: FSMContext):
     if message.text == "Отмена":
-        await state.clear()
-        main_kb = ReplyKeyboardMarkup(
-            keyboard=[
-                [KeyboardButton(text="Create Habit")],
-                [KeyboardButton(text="List Habits")]
-            ],
-            resize_keyboard=True,
-            one_time_keyboard=False
-        )
-        await message.answer("Создание привычки отменено.", reply_markup=main_kb)
+        await cancel_habit(message, state)
         return
     await state.update_data(name=message.text)
     await state.set_state(HabitStates.description)
@@ -56,16 +35,7 @@ async def process_name(message: Message, state: FSMContext):
 @router.message(HabitStates.description)
 async def process_description(message: Message, state: FSMContext):
     if message.text == "Отмена":
-        await state.clear()
-        main_kb = ReplyKeyboardMarkup(
-            keyboard=[
-                [KeyboardButton(text="Create Habit")],
-                [KeyboardButton(text="List Habits")]
-            ],
-            resize_keyboard=True,
-            one_time_keyboard=False
-        )
-        await message.answer("Создание привычки отменено.", reply_markup=main_kb)
+        await cancel_habit(message, state)
         return
     description = message.text if message.text != "нет" else None
     await state.update_data(description=description)
@@ -80,23 +50,15 @@ async def process_description(message: Message, state: FSMContext):
 @router.message(HabitStates.kind)
 async def process_kind(message: Message, state: FSMContext):
     if message.text == "Отмена":
-        await state.clear()
-        main_kb = ReplyKeyboardMarkup(
-            keyboard=[
-                [KeyboardButton(text="Create Habit")],
-                [KeyboardButton(text="List Habits")]
-            ],
-            resize_keyboard=True,
-            one_time_keyboard=False
-        )
-        await message.answer("Создание привычки отменено.", reply_markup=main_kb)
+        await cancel_habit(message, state)
         return
-    if message.text.lower() not in ["good", "bad"]:
-        await message.answer("Пожалуйста, выберите 'Good' или 'Bad'.")
+    kind_values = [e.value for e in HabitKindEnum]
+    if message.text.lower() not in kind_values:
+        await message.answer(f"Пожалуйста, выберите: {', '.join(kind_values)}.")
         return
     await state.update_data(kind=message.text.lower())
     await state.set_state(HabitStates.days)
-    days_en = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+    days_en = [e.value for e in WeekDayEnum]
     keyboard = [[KeyboardButton(text=day)] for day in days_en] + [[KeyboardButton(text="Done")], [KeyboardButton(text="Отмена")]]
     days_kb = ReplyKeyboardMarkup(
         keyboard=keyboard,
@@ -110,8 +72,23 @@ async def process_days(message: Message, state: FSMContext, api_client: ApiClien
     data = await state.get_data()
     days = data.get("days", [])
     if message.text.lower() == "done":
-        # Получить user_id по telegram_id
         user = await api_client.get_user_by_telegram_id(message.from_user.id)
+        if not user:
+            main_kb = ReplyKeyboardMarkup(
+                keyboard=[
+                    [KeyboardButton(text="Create Habit")],
+                    [KeyboardButton(text="List Habits")],
+                    [KeyboardButton(text="Edit Habit")]
+                ],
+                resize_keyboard=True,
+                one_time_keyboard=False
+            )
+            await message.answer(
+                "Ошибка: пользователь не найден. Пожалуйста, используйте /start для регистрации.",
+                reply_markup=main_kb
+            )
+            await state.clear()
+            return
         habit_data = HabitCreate(
             user_id=user.id,
             name=data["name"],
@@ -121,32 +98,25 @@ async def process_days(message: Message, state: FSMContext, api_client: ApiClien
         )
         await api_client.create_habit(habit_data)
         await state.clear()
-        # Вернуть пользователя в главное меню
         main_kb = ReplyKeyboardMarkup(
             keyboard=[
                 [KeyboardButton(text="Create Habit")],
-                [KeyboardButton(text="List Habits")]
+                [KeyboardButton(text="List Habits")],
+                [KeyboardButton(text="Edit Habit")]
             ],
             resize_keyboard=True,
             one_time_keyboard=False
         )
-        await message.answer("Привычка успешно создана! 🎉", reply_markup=main_kb)
+        await message.answer(
+            "Привычка успешно создана! 🎉\n\nЧтобы отредактировать привычку, нажмите 'Edit Habit' в меню.",
+            reply_markup=main_kb
+        )
     elif message.text == "Отмена":
-        await state.clear()
-        main_kb = ReplyKeyboardMarkup(
-            keyboard=[
-                [KeyboardButton(text="Start")],
-                [KeyboardButton(text="Add Habit")],
-                [KeyboardButton(text="List Habits")]
-            ],
-            resize_keyboard=True,
-            one_time_keyboard=False
-        )
-        await message.answer("Создание привычки отменено.", reply_markup=main_kb)
+        await cancel_habit(message, state)
     else:
         days.append(message.text)
         await state.update_data(days=days)
-        days_en = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+        days_en = [e.value for e in WeekDayEnum]
         keyboard = [[KeyboardButton(text=day)] for day in days_en] + [[KeyboardButton(text="Done")], [KeyboardButton(text="Отмена")]]
         days_kb = ReplyKeyboardMarkup(
             keyboard=keyboard,
@@ -154,27 +124,3 @@ async def process_days(message: Message, state: FSMContext, api_client: ApiClien
             one_time_keyboard=True
         )
         await message.answer("Добавьте ещё день или нажмите 'Done':", reply_markup=days_kb)
-
-@router.message(lambda m: m.text == "List Habits")
-async def list_habits(message: Message, api_client: ApiClient = None):
-    habits = await api_client.get_habits(message.from_user.id)
-    main_kb = ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text="Create Habit")],
-            [KeyboardButton(text="List Habits")]
-        ],
-        resize_keyboard=True,
-        one_time_keyboard=False
-    )
-    if not habits:
-        await message.answer("У вас нет привычек.", reply_markup=main_kb)
-        return
-    response = "Твои привычки:\n" + "\n".join(
-        f"- {h.name} ({h.kind}), дни: {', '.join(h.days)}, описание: {h.description or 'нет'}"
-        for h in habits
-    )
-    await message.answer(response, reply_markup=main_kb)
-
-@router.message()
-async def unknown_message(message: Message):
-    await message.answer("Пожалуйста, используйте команды /start, /add_habit, /list_habits, /cancel.")

@@ -14,7 +14,6 @@ class HabitCreate(BaseModel):
     def validate_days(cls, days):
         if days is None:
             return days
-        # Если days содержит enum объекты, преобразуй в значения
         if isinstance(days, list) and days:
             if hasattr(days[0], 'value'):
                 return [d.value if hasattr(d, 'value') else d for d in days]
@@ -32,6 +31,13 @@ class HabitResponse(BaseModel):
     kind: HabitKindEnum
     days: Optional[List[WeekDayEnum]] = None
 
+class HabitUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    kind: Optional[HabitKindEnum] = None
+    days: Optional[List[WeekDayEnum]] = None
+    time: Optional[datetime] = None
 
-from pydantic import BaseModel, ConfigDict
-from datetime import datetime
+class HabitDelete(BaseModel):
+    id: int
+    
