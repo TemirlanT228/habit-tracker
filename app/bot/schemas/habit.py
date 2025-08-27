@@ -7,6 +7,7 @@ class HabitCreate(BaseModel):
     description: Optional[str] = None
     kind: str
     days: Optional[List[str]] = None
+    time: Optional[str] = None
 
 class HabitResponse(BaseModel):
     id: int
@@ -17,3 +18,4 @@ class HabitResponse(BaseModel):
     days: Optional[List[str]]
     created_at: str
     updated_at: str
+    time: Optional[str] = None

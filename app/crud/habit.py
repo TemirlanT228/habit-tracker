@@ -12,7 +12,7 @@ async def create_habit(db: AsyncSession, habit: HabitCreate):
     return db_habit
 
 async def get_habit_by_user(db: AsyncSession, user_id: int):
-    result = await db.execute(select(Habit).filter(Habit.user_id == user_id))
+    result = await db.execute(select(Habit).filter(Habit.user_id == user_id).order_by(Habit.id))
     return result.scalars().all()
 
 async def update_habit(db: AsyncSession, habit_id: int, user_id: int, updates: dict):

@@ -11,9 +11,11 @@ class HabitStates(StatesGroup):
     description = State()
     kind = State()
     days = State()
+    time = State()
     edit_select = State()
     edit_field = State()
     edit_value = State()
+    list_select = State()
 
 async def cancel_habit(message: Message, state: FSMContext):
     await state.clear()

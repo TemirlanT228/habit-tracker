@@ -1,7 +1,7 @@
 from pydantic import BaseModel, ConfigDict, field_validator
 from app.models.enums import HabitKindEnum, WeekDayEnum
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, time
 
 class HabitCreate(BaseModel):
     user_id: int
@@ -9,6 +9,7 @@ class HabitCreate(BaseModel):
     description: Optional[str] = None
     kind: HabitKindEnum
     days: Optional[List[WeekDayEnum]] = None
+    time: time
 
     @field_validator("days", mode="before")
     def validate_days(cls, days):
@@ -30,14 +31,14 @@ class HabitResponse(BaseModel):
     updated_at: datetime
     kind: HabitKindEnum
     days: Optional[List[WeekDayEnum]] = None
+    time: time
 
 class HabitUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
     kind: Optional[HabitKindEnum] = None
     days: Optional[List[WeekDayEnum]] = None
-    time: Optional[datetime] = None
+    time: Optional[time] = None
 
 class HabitDelete(BaseModel):
     id: int
-    
